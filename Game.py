@@ -5,14 +5,16 @@ from random import randint
 class Game:
     alphabet = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
                 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z')
+    min_sequence = 3
     min_board = 3
     max_board = 26
     win_status = 0
     answers = ['Y', 'N']
+    max_background_sign = 4
+    question_enter_square = 'Enter your square: [first number last letter no gap between]\n'
 
     def __init__(self, side_square: int, background_sign: str, player1_sign: str, player2_sign: str,
                  sequence_number: int):
-
         self.__side_square = self._is_valid_side_square(side_square)
         self.__board = self.create_board(side_square, background_sign)
         self.__background_sign = self._is_valid_background_sign(background_sign)
@@ -34,7 +36,7 @@ class Game:
         if player_response.upper() in self.answers:
             return player_response.upper()
         else:
-            print("Sorry your input is wrong, please try type it again")
+            print('Sorry your input is wrong, please try type it again')
             return self._is_input_valid(input('Do you wanna choose who starts? [y/n]\n'))
 
     def _is_valid_side_square(self, side_square: int) -> int:
@@ -43,11 +45,19 @@ class Game:
         else:
             raise ValueError(f'Currently side of the board cant be under {self.min_board} and over {self.max_board}')
 
+    def _is_valid_side_sequence(self, sequence: int, side: int) -> int:
+        if self.min_sequence >= sequence:
+            raise ValueError(f'Winning sequence cannot be shorter than {self.min_sequence}')
+        elif sequence > side:
+            raise ValueError('Winning sequence cannot be longer than board edge')
+        else:
+            return sequence
+
     def _is_valid_background_sign(self, sign: str) -> str:
         if len(sign) == 0:
             raise ValueError('Sign must have any character')
-        elif len(sign) > 4:
-            raise ValueError('Sign must have less characters then 4')
+        elif len(sign) > self.max_background_sign:
+            raise ValueError(f'Sign must have less characters then {self.max_background_sign}')
         else:
             return sign
 
@@ -58,14 +68,6 @@ class Game:
             raise ValueError('Sign must have less characters then background sign')
         else:
             return sign
-
-    def _is_valid_side_sequence(self, sequence: int, side: int) -> int:
-        if 2 >= sequence:
-            raise ValueError("Winning sequence cannot be shorter than 1")
-        elif sequence > side:
-            raise ValueError("Winning sequence cannot be longer than board edge")
-        else:
-            return sequence
 
     def _is_valid_letter(self, letter: str) -> bool:
         regex = '[A-{letter}a-{l_letter}]'.format(letter=self.alphabet[len(self.__board) - 1],
@@ -103,10 +105,10 @@ class Game:
                     self.__board[-int(number)][self.alphabet.index(letter.upper())] = self.__player1_sign
             else:
                 print('This field is taken')
-                self.replace_sign(first_player, input('Enter your square: [first number last letter no gap between]\n'))
+                self.replace_sign(first_player, input(self.question_enter_square))
         else:
             print('Your input is wrong, please try again')
-            self.replace_sign(first_player, input('Enter your square: [first number last letter no gap between]\n'))
+            self.replace_sign(first_player, input(self.question_enter_square))
 
     def check_win(self, first_player: bool) -> bool:
         sign = self.__player1_sign if first_player else self.__player2_sign
@@ -217,16 +219,15 @@ class Game:
         return True
 
     def play_again(self) -> bool:
-        again = ''
-        while again not in ['Y', 'N']:
-            again = input('Do you wanna play? [y/n]\n').upper()
-        return True if again == 'Y' else False
+        again = None
+        while again not in self.answers:
+            again = input('Do you wanna play? [y/n]\n')
+        return True if again.upper() == self.answers[0] else False
 
     def player_move(self, player_1_starts: bool) -> bool:
         print(f'Player {1 if player_1_starts else 2} turn\n')
         self.show_board()
-        self.replace_sign(player_1_starts,
-                          input('Enter your square: [first number last letter no gap between]\n'))
+        self.replace_sign(player_1_starts, input(self.question_enter_square))
         if self.check_win(player_1_starts):
             print(f'Player {1 if player_1_starts else 2} won game\n')
             self.show_board()
